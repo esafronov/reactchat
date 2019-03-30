@@ -1,0 +1,24 @@
+{
+  "name": "chat",
+  "author" : "Egor Safronov",
+  "version": "0.0.1",
+  "dependencies": {
+    "bootstrap": "^4.3.1",
+    "moment": "^2.24.0",
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6",
+    "react-scripts": "^2.1.8",
+    "reactstrap": "^5.0.0",
+    "socket.io": "^2.2.0"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build"
+  },
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not ie <= 11",
+    "not op_mini all"
+  ]
+}
