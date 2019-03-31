@@ -1,14 +1,12 @@
 const socket = require('socket.io');
 const config = require('./config.js');
 const db = require('./modules/db.js');
-const express = require('./modules/express.js');
 const longt = require('mongodb').Long;
 db.init()
-.then(express.init)
-.then(function(server){
-	const io = socket(server);
+.then(function(){
+	const io = socket(config.port);
 	io.on('connection', (socket) => {
-		console.log(socket.id);
+		console.log(`${socket.id} connected`);
 		socket.on('send_message', function(data){
 			let col = db.client.collection(config.col.mes);
 			data.created = new Date();
@@ -18,11 +16,10 @@ db.init()
 				if (err) console.log(err);
 			});
 			io.emit('get_message', data);
-			console.log(data);
+//			console.log(data);
 		});
 		socket.on('send_previous', function(data){
 			let col = db.client.collection(config.col.mes);
-			console.log(data.timestamp);
 			col.find({timestamp:{"$lt":data.timestamp}})
 				.sort({timestamp:-1})
 				.limit(10)
@@ -33,7 +30,6 @@ db.init()
 					});
 				});
 		});
-		
 	});
 }).catch(err => {
 	console.log(err);

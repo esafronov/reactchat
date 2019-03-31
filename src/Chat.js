@@ -1,41 +1,69 @@
 import React from "react";
 import io from "socket.io-client";
 import moment from 'moment/moment.js';
+import 'moment/locale/ru';
+import { config } from './config.js';
 
 class Chat extends React.Component{
      constructor(props){
-        moment.locale('ru');
+        
+		/*
+		set moment localization
+		*/
+		moment.locale('ru');
+		
 		super(props);
 		
+		/*
+		default react data
+		*/
 		this.state = {
             username: props.username,
             message: '',
             messages: [],
 			timestamp : null,
-			isPrevious : true
+			isPrevious : true, //show or hide previous button
+			init : false //is chat initialized
         };
 		
-		this.socket = io('localhost:8080');
+		/*
+		connect to chat server
+		*/
+		this.socket = io(config.server);
 		
 		this.socket.on('connect', () => {
 			let now = new Date().getTime();
-			this.setState({timestamp : now});
-			this.sendPrevious('init');
+			//set current timestamp
+			this.setState({
+				timestamp : now
+			});
+			//request previous messages on init
+			if (!this.state.init) this.sendPrevious('init');
 		});
 
+		/*
+		incoming socket event from server
+		*/
 		this.socket.on('get_previous', data => {
+			//add requested messages
 			this.addPrevious(data);
 		});
 		
+		/*
+		request previous messages from server
+		*/
 		this.sendPrevious = (action) => {
-			console.log(action);
 			this.socket.emit('send_previous', {	
 				timestamp : this.state.timestamp,
 				action : action
 			});
 		}
 		
+		/*
+		add incoming messages to react state
+		*/
 		this.addPrevious = data => {
+			//show or hide load previous button depend on incoming messages count
 			if(data.messages.length<10) {
 				this.setState({
 					isPrevious : false
@@ -43,22 +71,38 @@ class Chat extends React.Component{
 				if (data.messages.length===0) return;
 			}
 			data.messages.reverse();
+			//change chat window timestamp
 			this.setState({
 				timestamp : data.messages.length > 0 ? data.messages[0].timestamp : this.state.timestamp, 
 				messages : [...data.messages,...this.state.messages]
 			});
-			if (data.action==='init') this.scrolldown();
+			//call scroll down chat only on chat initialization
+			if (data.action==='init') {
+				this.setState({
+					init : true
+				});
+				this.scrolldown();
+			}
 		}		
 		
+		/*
+		incoming socket event from server
+		*/
 		this.socket.on('get_message', data => {
 			this.addMessage(data);
 		});
 		
+		/*
+		add incoming message to react state
+		*/
 		this.addMessage = data => {
 			this.setState({messages : [...this.state.messages,data]});
 			this.scrolldown();
 		}
 		
+		/*
+		send message to chat server for broadcasting
+		*/
 		this.sendMessage = ev => {
 			if (!this.state.message) return false;
 			ev.preventDefault();
@@ -69,10 +113,16 @@ class Chat extends React.Component{
 			this.setState({message: ''});
 		}
 		
+		/*
+		format message time with moment
+		*/
 		this.formatTime = time => {
-			return moment(time).format('HH:mm:ss')
+			return moment(time).format('D MMM HH:mm:ss')
 		}
 		
+		/*
+		scroll down chat
+		*/
 		this.scrolldown = () => {			
 			let el = document.getElementsByClassName('scrollable');
 			let scrollHeight = Math.max(el[0].scrollHeight, el[0].clientHeight);
@@ -94,7 +144,9 @@ class Chat extends React.Component{
 					}
 					{this.state.messages.map((message,index) => {
 						return (
-							<li className="list-group-item" key={index}>{this.formatTime(message.created)} <b>{message.author}</b><br/> {message.message}</li>
+							<li className="list-group-item" key={index}>
+							<small>{this.formatTime(message.created)} <b>{message.author}</b></small><br/> 
+							<i>{message.message}</i></li>
 						)
 					})}
 				</ul>

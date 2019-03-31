@@ -13,6 +13,7 @@ class App extends Component {
 		this.login = this.login.bind(this);
 	}
   
+	//login user to chat with his name
 	login(username){
 		console.log(username);
 		this.setState({

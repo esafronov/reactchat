@@ -11,6 +11,7 @@ class Login extends React.Component{
 		this.auth = ev => {
 			if (!this.state.username) return false;
 			ev.preventDefault();
+			//call login method of parent component
 			this.props.login(this.state.username);
 		}
 
